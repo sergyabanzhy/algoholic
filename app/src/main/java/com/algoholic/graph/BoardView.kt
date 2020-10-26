@@ -27,7 +27,7 @@ class BoardView : View {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int)
             : super(context, attrs, defStyleAttr, defStyleRes)
 
-    private val TAG = "FieldView"
+
     private val colorBackground = rgb(188, 245, 204)
     private var initialized: Boolean = false
     private val board: MutableMap<Int, LinkedList<Vertex>> = mutableMapOf()
@@ -186,7 +186,7 @@ class BoardView : View {
                     invalidate()
                     return
                 } else {
-                    mainHandler.postDelayed(this, 100)
+                    mainHandler.postDelayed(this, 75)
                 }
                 
                 dijcstra()
@@ -341,3 +341,5 @@ class BoardView : View {
         return vertex
     }
 }
+
+private const val TAG = "FieldView"

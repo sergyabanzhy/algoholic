@@ -1,6 +1,5 @@
 package com.algoholic.graph
 
-import android.R.attr.radius
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.graphics.*
@@ -13,6 +12,7 @@ data class Vertex(
     var paint: Marker = Marker.Idle(),
     var distance: Int = Int.MAX_VALUE,
     var disabled: Boolean = false,
+    var isBlock: Boolean = false,
     var previousVertex: Vertex? = null
 ) {
     var animator = ValueAnimator()

@@ -1,20 +1,17 @@
 package com.algoholic.graph
 
-import android.animation.PropertyValuesHolder
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Color.rgb
 import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.LinearInterpolator
-import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
 import java.util.*
 
 
@@ -35,7 +32,8 @@ class FieldView : View {
     private var initialized: Boolean = false
     private val board: MutableMap<Int, LinkedList<Vertex>> = mutableMapOf()
     private var gcd = -1
-    private val cellsToDraw: MutableList<Vertex> = mutableListOf()
+    private val initialVertexesToDraw: MutableList<Vertex> = mutableListOf()
+    val mainHandler = Handler(Looper.getMainLooper())
     private val gridColor = Paint().apply {
         color = Color.RED
         strokeWidth = 3F
@@ -121,15 +119,16 @@ class FieldView : View {
 
         prepareField(canvas)
 
-        cellsToDraw.forEach {
-            canvas.drawRoundRect(it.rect(), radius.toFloat(), radius.toFloat(), it.paint.paint)
+        initialVertexesToDraw.forEach {
+            canvas.drawRect(
+                it.rect(),
+                it.paint.paint
+            )
         }
 
         visitedVertices.forEach {
-            canvas.drawRoundRect(
+            canvas.drawRect(
                 it.rect(),
-                radius.toFloat(),
-                radius.toFloat(),
                 it.paint.paint
             )
         }
@@ -145,7 +144,19 @@ class FieldView : View {
 
         path.forEach {
             it?.run {
-                canvas.drawRect(it.rect(), it.paint.paint)
+                canvas.drawRoundRect(
+                    it.rect(),
+                    radius.toFloat(),
+                    radius.toFloat(),
+                    it.paint.paint
+                )
+
+                canvas.drawText(
+                    it.distance.toString(),
+                    (it.x.toFloat() + gcd / 2),
+                    (it.y.toFloat() + gcd / 2),
+                    gridColor
+                )
             }
         }
 
@@ -159,82 +170,40 @@ class FieldView : View {
         initialized = true
     }
 
-    private val visitedVertices: MutableList<Vertex> = mutableListOf()
-
-
-    var animator = ValueAnimator()
-    var radius = 0
-    private fun star() {
-        val propertyRadius: PropertyValuesHolder = PropertyValuesHolder.ofInt(PROPERTY_RADIUS, gcd, 0)
-        val propertyRotate: PropertyValuesHolder = PropertyValuesHolder.ofInt(PROPERTY_ROTATE, 0, 360)
-
-        animator = ValueAnimator()
-        animator.setValues(propertyRadius, propertyRotate)
-        animator.duration = 3000
-        animator.interpolator = LinearInterpolator()
-        animator.addUpdateListener { animation ->
-            radius = animation.getAnimatedValue(PROPERTY_RADIUS) as Int
-            //rotate = animation.getAnimatedValue(PROPERTY_ROTATE) as Int
-
-            if (found) {
-                invalidate()
-                return@addUpdateListener
-            }
-
-            val currentVertex = findCellWithShortestDistance()
-
-            currentVertex?.run {
-                //distance is calculated
-                currentVertex.disabled = true
-                val nbrs = findNeighborsForCell(this)
-
-                nbrs.forEach {
-                    it.previousVertex = currentVertex
-                }
-
-                if (containsEndCell(nbrs)) {
-                    Toast.makeText(context, "Found", LENGTH_SHORT).show()
-                } else {
-                    visitedVertices.addAll(nbrs)
-                     invalidate()
-                }
-            }
-        }
-        animator.start()
-    }
+    internal val visitedVertices: MutableList<Vertex> = mutableListOf()
 
     fun start() {
         star()
-//        while (!found) {
-//
-//            val currentVertex = findCellWithShortestDistance()
-//
-//            currentVertex?.run {
-//                    //distance is calculated
-//                currentVertex.disabled = true
-//                    val nbrs = findNeighborsForCell(this)
-//
-//                    nbrs.forEach {
-//                        it.previousVertex = currentVertex
-//                    }
-//
-//                    if (containsEndCell(nbrs)) {
-//                        Toast.makeText(context, "Found", LENGTH_SHORT).show()
-//                    } else {
-//                        visitedVertices.addAll(nbrs)
-//                       // invalidate()
-//                    }
-//                }
-//        }
     }
 
-    private fun findCellWithShortestDistance(): Vertex? {
+    private fun star() {
+        if (found) {
+            return
+        }
 
-        return if (visitedVertices.isEmpty()) cellsToDraw.first() else visitedVertices.filterNot { it.disabled }
+        mainHandler.post(object : Runnable {
+            override fun run() {
+
+                if (found) {
+                    mainHandler.removeCallbacksAndMessages(null)
+                    invalidate()
+                    return
+                } else {
+                    mainHandler.postDelayed(this, 100)
+                }
+                
+                dijcstra()
+            }
+        })
+    }
+
+    internal fun findCellWithShortestDistance(): Vertex? {
+
+        return if (visitedVertices.isEmpty()) initialVertexesToDraw.first() else visitedVertices.filterNot { it.disabled }
             .minByOrNull { it.distance }
     }
 
-    private fun containsEndCell(vertices: MutableList<Vertex>): Boolean {
+    internal fun containsEndCell(vertices: MutableList<Vertex>): Boolean {
         vertices.forEach {
             if (!it.isEnd()) {
                 it.paint = Marker.Visited()
@@ -263,7 +232,7 @@ class FieldView : View {
         Log.d(TAG, "path  $path")
     }
 
-    private fun findNeighborsForCell(start: Vertex): MutableList<Vertex> {
+    internal fun findNeighborsForCell(start: Vertex): MutableList<Vertex> {
         val neighbors = mutableListOf<Vertex>()
 
         board[start.bucket]?.run {
@@ -288,7 +257,7 @@ class FieldView : View {
     private fun getFromNearBucket(nearBucket: LinkedList<Vertex>, index: Int, distance: Int): Vertex? {
 
         val cell = nearBucket[index]
-        return if (!visitedVertices.contains(cell) && !cell.isStart()) {
+        return if (!visitedVertices.contains(cell) && !cell.isStart() && !cell.isBlock) {
             cell.distance = if (distance == Int.MAX_VALUE && distance == 0) 1 else distance + 1
             cell
         } else {
@@ -305,7 +274,7 @@ class FieldView : View {
     private fun getNeighborsInOneBucket(bucket: LinkedList<Vertex>, start: Vertex): MutableList<Vertex> {
         val neighbors = mutableListOf<Vertex>()
         getNext(bucket, start)?.run {
-            if (!visitedVertices.contains(this) && !isStart()) {
+            if (!visitedVertices.contains(this) && !isStart() && !isBlock) {
                 distance =
                     if (distance == Int.MAX_VALUE && start.distance == 0) 1 else start.distance + 1
                 neighbors.add(this)
@@ -313,7 +282,7 @@ class FieldView : View {
         }
 
         getPrevious(bucket, start)?.run {
-            if (!visitedVertices.contains(this) && !isStart()) {
+            if (!visitedVertices.contains(this) && !isStart() && !isBlock) {
                 distance =
                     if (distance == Int.MAX_VALUE && start.distance == 0) 1 else start.distance + 1
                 neighbors.add(this)
@@ -327,7 +296,6 @@ class FieldView : View {
         return if (iterator.hasNext()) iterator.next() else null
     }
 
-
     private fun getPrevious(bucket: LinkedList<Vertex>, start: Vertex): Vertex? {
         val iterator = bucket.listIterator(bucket.indexOf(start))
         return if (iterator.hasPrevious()) iterator.previous() else null
@@ -339,14 +307,21 @@ class FieldView : View {
                 if (event.action == MotionEvent.ACTION_UP) {
                     Log.d(TAG, "event - X:${event.x}, Y:${event.y}")
                     findTouchedCell(event.x, event.y)?.run {
-                        if (cellsToDraw.isEmpty()) {
-                            distance = 0
-                            paint = Marker.SourcePoint()
-                        } else {
-                            paint = Marker.EndPoint()
+                        when {
+                            initialVertexesToDraw.isEmpty() -> {
+                                distance = 0
+                                paint = Marker.SourcePoint()
+                            }
+                            initialVertexesToDraw.size == 1 -> {
+                                paint = Marker.EndPoint()
+                            }
+                            else -> {
+                                isBlock = true
+                                paint = Marker.BlockedPoint()
+                            }
                         }
 
-                        cellsToDraw.add(this)
+                        initialVertexesToDraw.add(this)
 
                         invalidate()
                     }

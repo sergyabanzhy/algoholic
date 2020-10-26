@@ -1,8 +1,5 @@
 package com.algoholic
 
-import com.algoholic.graph.Edge
-import com.algoholic.graph.Graph
-import com.algoholic.graph.Node
 import org.junit.Test
 
 import java.util.*

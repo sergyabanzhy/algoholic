@@ -15,7 +15,7 @@ import android.view.View
 import java.util.*
 
 
-class FieldView : View {
+class BoardView : View {
     constructor(context: Context) : super(context)
 
     constructor(context: Context, attrs: AttributeSet?)
@@ -31,7 +31,7 @@ class FieldView : View {
     private val colorBackground = rgb(188, 245, 204)
     private var initialized: Boolean = false
     private val board: MutableMap<Int, LinkedList<Vertex>> = mutableMapOf()
-    private var gcd = -1
+    private var gridSize = pxFromDp(25F)
     private val initialVertexesToDraw: MutableList<Vertex> = mutableListOf()
     val mainHandler = Handler(Looper.getMainLooper())
     private val gridColor = Paint().apply {
@@ -68,7 +68,6 @@ class FieldView : View {
 
         Log.d(TAG, "height - $height")
         Log.d(TAG, "width - $width")
-        gcd = gcd(height, width)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -77,10 +76,10 @@ class FieldView : View {
     }
 
     private fun drawYLines(canvas: Canvas) {
-        for (x in 0 until canvas.width step gcd) {
+        for (x in 0 until canvas.width step gridSize) {
             canvas.drawLine(x.toFloat(), 0F, x.toFloat(), canvas.height.toFloat(), gridColor)
             if (!initialized) {
-                val key = if (x > 0) x / gcd else x
+                val key = if (x > 0) x / gridSize else x
                 board[key] = LinkedList()
             }
 
@@ -88,28 +87,28 @@ class FieldView : View {
     }
 
     private fun drawBoard(canvas: Canvas) {
-        for (y in 0 until canvas.height step gcd) {
+        for (y in 0 until canvas.height step gridSize) {
             canvas.drawLine(0F, y.toFloat(), canvas.width.toFloat(), y.toFloat(), gridColor)
 
-            for (x in 0 until canvas.width step gcd) {
+            for (x in 0 until canvas.width step gridSize) {
                 canvas.drawLine(x.toFloat(), 0F, x.toFloat(), canvas.height.toFloat(), gridColor)
             }
         }
     }
 
     private fun drawXLines(canvas: Canvas) {
-        for (y in 0 until canvas.height step gcd) {
+        for (y in 0 until canvas.height step gridSize) {
             canvas.drawLine(0F, y.toFloat(), canvas.width.toFloat(), y.toFloat(), gridColor)
             if (!initialized) {
-                for (v in 0 until canvas.height step gcd) {
-                    addByCell(y, Vertex(x = y, y = v, edge = gcd))
+                for (v in 0 until canvas.height step gridSize) {
+                    addByCell(y, Vertex(x = y, y = v, edge = gridSize))
                 }
             }
         }
     }
 
     private fun addByCell(key: Int, value: Vertex) {
-        val bucket = if (key > 0) key / gcd else key
+        val bucket = if (key > 0) key / gridSize else key
         value.bucket = bucket
         board[bucket]?.add(value)
     }
@@ -136,25 +135,23 @@ class FieldView : View {
         visitedVertices.forEach {
             canvas.drawText(
                 it.distance.toString(),
-                (it.x.toFloat() + gcd / 2),
-                (it.y.toFloat() + gcd / 2),
+                (it.x.toFloat() + gridSize / 2),
+                (it.y.toFloat() + gridSize / 2),
                 textColor
             )
         }
 
         path.forEach {
             it?.run {
-                canvas.drawRoundRect(
+                canvas.drawRect(
                     it.rect(),
-                    radius.toFloat(),
-                    radius.toFloat(),
                     it.paint.paint
                 )
 
                 canvas.drawText(
                     it.distance.toString(),
-                    (it.x.toFloat() + gcd / 2),
-                    (it.y.toFloat() + gcd / 2),
+                    (it.x.toFloat() + gridSize / 2),
+                    (it.y.toFloat() + gridSize / 2),
                     gridColor
                 )
             }
@@ -257,7 +254,7 @@ class FieldView : View {
     private fun getFromNearBucket(nearBucket: LinkedList<Vertex>, index: Int, distance: Int): Vertex? {
 
         val cell = nearBucket[index]
-        return if (!visitedVertices.contains(cell) && !cell.isStart() && !cell.isBlock) {
+        return if (!visitedVertices.contains(cell) && !cell.isStart() && !cell.isWall) {
             cell.distance = if (distance == Int.MAX_VALUE && distance == 0) 1 else distance + 1
             cell
         } else {
@@ -274,7 +271,7 @@ class FieldView : View {
     private fun getNeighborsInOneBucket(bucket: LinkedList<Vertex>, start: Vertex): MutableList<Vertex> {
         val neighbors = mutableListOf<Vertex>()
         getNext(bucket, start)?.run {
-            if (!visitedVertices.contains(this) && !isStart() && !isBlock) {
+            if (!visitedVertices.contains(this) && !isStart() && !isWall) {
                 distance =
                     if (distance == Int.MAX_VALUE && start.distance == 0) 1 else start.distance + 1
                 neighbors.add(this)
@@ -282,7 +279,7 @@ class FieldView : View {
         }
 
         getPrevious(bucket, start)?.run {
-            if (!visitedVertices.contains(this) && !isStart() && !isBlock) {
+            if (!visitedVertices.contains(this) && !isStart() && !isWall) {
                 distance =
                     if (distance == Int.MAX_VALUE && start.distance == 0) 1 else start.distance + 1
                 neighbors.add(this)
@@ -316,7 +313,7 @@ class FieldView : View {
                                 paint = Marker.EndPoint()
                             }
                             else -> {
-                                isBlock = true
+                                isWall = true
                                 paint = Marker.BlockedPoint()
                             }
                         }
@@ -343,15 +340,4 @@ class FieldView : View {
 
         return vertex
     }
-}
-
-private fun gcd(a: Int, b: Int): Int {
-    var a = a
-    var b = b
-    while (b != 0) {
-        val tmp = a % b
-        a = b
-        b = tmp
-    }
-    return a
 }

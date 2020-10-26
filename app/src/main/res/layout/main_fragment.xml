@@ -7,22 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.main.MainFragment">
 
-    <Button
-        android:id="@+id/btnStart"
-        android:layout_width="80dp"
-        android:layout_height="60dp"
-        android:text="start"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.algoholic.graph.FieldView
-        android:id="@+id/simpleGridView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:numColumns="4"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

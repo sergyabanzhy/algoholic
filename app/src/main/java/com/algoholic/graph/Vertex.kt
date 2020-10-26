@@ -12,12 +12,9 @@ data class Vertex(
     var paint: Marker = Marker.Idle(),
     var distance: Int = Int.MAX_VALUE,
     var disabled: Boolean = false,
-    var isBlock: Boolean = false,
+    var isWall: Boolean = false,
     var previousVertex: Vertex? = null
-) {
-    var animator = ValueAnimator()
-    var radius = 0
-}
+)
 
 fun Vertex.rect(): RectF {
     return RectF(x.toFloat(), y.toFloat(), (x + edge).toFloat(), (y + edge).toFloat())
@@ -30,28 +27,6 @@ fun Vertex.isStart(): Boolean {
 fun Vertex.isEnd(): Boolean {
     return paint is Marker.EndPoint
 }
-
-fun Vertex.isVisited(): Boolean {
-    return paint is Marker.Visited
-}
-
-fun Vertex.drawWithAnim(invalidate:() -> (Unit)) {
-    val propertyRadius: PropertyValuesHolder = PropertyValuesHolder.ofInt(PROPERTY_RADIUS, 0, 150)
-    val propertyRotate: PropertyValuesHolder = PropertyValuesHolder.ofInt(PROPERTY_ROTATE, 0, 360)
-
-    animator = ValueAnimator()
-    animator.setValues(propertyRadius, propertyRotate)
-    animator.duration = 2000
-    animator.addUpdateListener { animation ->
-        radius = animation.getAnimatedValue(PROPERTY_RADIUS) as Int
-        //rotate = animation.getAnimatedValue(PROPERTY_ROTATE) as Int
-        invalidate()
-    }
-    animator.start()
-}
-
-internal const val PROPERTY_RADIUS = "PROPERTY_RADIUS"
-internal const val PROPERTY_ROTATE = "PROPERTY_ROTATE"
 
 sealed class Marker {
     abstract val paint: Paint

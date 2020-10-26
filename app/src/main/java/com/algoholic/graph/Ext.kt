@@ -2,7 +2,7 @@ package com.algoholic.graph
 
 import android.widget.Toast
 
-fun FieldView.dijcstra() {
+fun BoardView.dijcstra() {
     val currentVertex = findCellWithShortestDistance()
     currentVertex?.run {
         //distance is calculated
@@ -23,4 +23,12 @@ fun FieldView.dijcstra() {
         Toast.makeText(context, "Can not be reached", Toast.LENGTH_SHORT).show()
         mainHandler.removeCallbacksAndMessages(null)
     }
+}
+
+fun BoardView.dpFromPx(px: Float): Int {
+    return (px / context.resources.displayMetrics.density).toInt()
+}
+
+fun BoardView.pxFromDp(dp: Float): Int {
+    return (dp * context.resources.displayMetrics.density).toInt()
 }

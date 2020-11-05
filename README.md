@@ -1,13 +1,10 @@
 # algoholic (WIP)
 The app is the result of a process of learning algorithms
 
-# Dijkstra's algorithm visualisation(WIP)
-Simple visualization of Dijkstra algorithm using Android platform tools.
+# Dijkstra's and A* visualisation
+Simple visualization of Dijkstra and A algorithm using Android platform tools.
 
-![Demo CountPages alpha](https://imgur.com/ndGjScC.gif)
-![Demo CountPages alpha](https://imgur.com/hCLNUwf.gif)
-
-# A*(TBD)
+![Demo CountPages alpha](https://i.imgur.com/OsvVlEF.gif)
 
 
 # License

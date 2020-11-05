@@ -2,7 +2,7 @@
 The app is the result of a process of learning algorithms
 
 # Dijkstra's and A* visualisation
-Simple visualization of Dijkstra and A algorithm using Android platform tools.
+Simple visualization of Dijkstra's and A star algorithm using Android platform tools.
 
 ![Demo CountPages alpha](https://i.imgur.com/OsvVlEF.gif)
 

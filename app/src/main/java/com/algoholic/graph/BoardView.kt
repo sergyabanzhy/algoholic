@@ -59,7 +59,7 @@ class BoardView : View {
     internal val visitedVertices: MutableList<Vertex> = mutableListOf()
 
     private val textColor = Paint().apply {
-        color = Color.BLACK
+        color = Color.WHITE
         strokeWidth = 3F
         textSize = 20F
     }

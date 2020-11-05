@@ -11,13 +11,13 @@
     app:behavior_peekHeight="30dp"
     app:layout_behavior="@string/bottom_sheet_behavior">
 
-    <TextView
+    <ImageView
         android:id="@+id/textView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="15dp"
+        android:src="@drawable/rouded"
         android:gravity="center"
         android:padding="6dp"
-        android:text="Select"
         android:textColor="@color/black"
         android:textSize="22sp"
         android:textStyle="bold"

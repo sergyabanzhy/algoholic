@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import java.util.*
 
 
@@ -29,9 +30,10 @@ class BoardView : View {
 
 
     private val colorBackground = rgb(188, 245, 204)
-    private var initialized: Boolean = false
     private val board: MutableMap<Int, LinkedList<Vertex>> = mutableMapOf()
     private var gridSize = pxFromDp(25F)
+    private lateinit var startVertex: Vertex
+    private lateinit var endVertex: Vertex
     private val initialVertexesToDraw: MutableList<Vertex> = mutableListOf()
     val mainHandler = Handler(Looper.getMainLooper())
     private val gridColor = Paint().apply {
@@ -41,7 +43,20 @@ class BoardView : View {
 
     private val path: MutableList<Vertex?> = mutableListOf()
 
+    var isAstarSelected: Boolean = false
+    private var selectedSpeed: Int = 100
+    private val dalay: Int = 100
+
+    fun changeSpeed(value: Int) {
+        Log.d(TAG, "value - $value")
+        selectedSpeed = dalay + value
+
+        Log.d(TAG, "selectedSpeed - $selectedSpeed")
+    }
+
     private var found: Boolean = false
+
+    internal val visitedVertices: MutableList<Vertex> = mutableListOf()
 
     private val textColor = Paint().apply {
         color = Color.BLACK
@@ -66,44 +81,42 @@ class BoardView : View {
         Log.d(TAG, "onLayout")
         super.onLayout(changed, left, top, right, bottom)
 
-        Log.d(TAG, "height - $height")
-        Log.d(TAG, "width - $width")
+        Log.d(TAG, "onLayout height - $height")
+        Log.d(TAG, "onLayout width - $width")
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         Log.d(TAG, "onSizeChanged")
         super.onSizeChanged(w, h, oldw, oldh)
+
+        Log.d(TAG, "onSizeChanged height - $height")
+        Log.d(TAG, "onSizeChanged width - $width")
+
+        prepareField()
     }
 
-    private fun drawYLines(canvas: Canvas) {
-        for (x in 0 until canvas.width step gridSize) {
-            canvas.drawLine(x.toFloat(), 0F, x.toFloat(), canvas.height.toFloat(), gridColor)
-            if (!initialized) {
-                val key = if (x > 0) x / gridSize else x
-                board[key] = LinkedList()
-            }
+    private fun drawYLines() {
+        for (x in 0 until width step gridSize) {
+            val key = if (x > 0) x / gridSize else x
+            board[key] = LinkedList()
+        }
+    }
 
+    private fun drawXLines() {
+        for (y in 0 until height step gridSize) {
+            for (v in 0 until height step gridSize) {
+                addByCell(y, Vertex(x = y, y = v, edge = gridSize))
+            }
         }
     }
 
     private fun drawBoard(canvas: Canvas) {
-        for (y in 0 until canvas.height step gridSize) {
-            canvas.drawLine(0F, y.toFloat(), canvas.width.toFloat(), y.toFloat(), gridColor)
-
-            for (x in 0 until canvas.width step gridSize) {
-                canvas.drawLine(x.toFloat(), 0F, x.toFloat(), canvas.height.toFloat(), gridColor)
-            }
+        for (y in 0 until height step gridSize) {
+            canvas.drawLine(0F, y.toFloat(), width.toFloat(), y.toFloat(), gridColor)
         }
-    }
 
-    private fun drawXLines(canvas: Canvas) {
-        for (y in 0 until canvas.height step gridSize) {
-            canvas.drawLine(0F, y.toFloat(), canvas.width.toFloat(), y.toFloat(), gridColor)
-            if (!initialized) {
-                for (v in 0 until canvas.height step gridSize) {
-                    addByCell(y, Vertex(x = y, y = v, edge = gridSize))
-                }
-            }
+        for (x in 0 until width step gridSize) {
+            canvas.drawLine(x.toFloat(), 0F, x.toFloat(), height.toFloat(), gridColor)
         }
     }
 
@@ -116,18 +129,18 @@ class BoardView : View {
     override fun onDraw(canvas: Canvas) {
         Log.d(TAG, "onDraw")
 
-        prepareField(canvas)
+        canvas.drawColor(colorBackground)
 
         initialVertexesToDraw.forEach {
             canvas.drawRect(
-                it.rect(),
+                it.rect,
                 it.paint.paint
             )
         }
 
         visitedVertices.forEach {
             canvas.drawRect(
-                it.rect(),
+                it.rect,
                 it.paint.paint
             )
         }
@@ -144,7 +157,7 @@ class BoardView : View {
         path.forEach {
             it?.run {
                 canvas.drawRect(
-                    it.rect(),
+                    it.rect,
                     it.paint.paint
                 )
 
@@ -159,21 +172,35 @@ class BoardView : View {
 
         drawBoard(canvas)
     }
-
-    private fun prepareField(canvas: Canvas) {
-        canvas.drawColor(colorBackground)
-        drawYLines(canvas)
-        drawXLines(canvas)
-        initialized = true
+    
+    private fun prepareField() {
+        drawYLines()
+        drawXLines()
     }
 
-    internal val visitedVertices: MutableList<Vertex> = mutableListOf()
+    fun clear() {
+        visitedVertices.clear()
+        initialVertexesToDraw.clear()
+        path.clear()
+        found = false
+        mainHandler.removeCallbacksAndMessages(null)
+
+        board.clear()
+
+        prepareField()
+
+        invalidate()
+    }
 
     fun start() {
-        star()
+        if (initialVertexesToDraw.isEmpty()) {
+            Toast.makeText(context, "Select start and end vertex first", Toast.LENGTH_LONG).show()
+        } else {
+            execute()
+        }
     }
 
-    private fun star() {
+    private fun execute() {
         if (found) {
             return
         }
@@ -186,24 +213,30 @@ class BoardView : View {
                     invalidate()
                     return
                 } else {
-                    mainHandler.postDelayed(this, 75)
+                    mainHandler.postDelayed(this, selectedSpeed.toLong())
                 }
-                
-                dijcstra()
+
+                if (isAstarSelected) astar() else dijcstra()
             }
         })
     }
 
     internal fun findCellWithShortestDistance(): Vertex? {
 
-        return if (visitedVertices.isEmpty()) initialVertexesToDraw.first() else visitedVertices.filterNot { it.disabled }
+        return if (visitedVertices.isEmpty()) initialVertexesToDraw.first() else visitedVertices.filterNot { it.calculated }
             .minByOrNull { it.distance }
+    }
+
+    internal fun findCellWithShortestH(): Vertex? {
+
+        return if (visitedVertices.isEmpty()) startVertex else visitedVertices.filterNot { it.calculated }
+            .minByOrNull { it.f(endVertex) }
     }
 
     internal fun containsEndCell(vertices: MutableList<Vertex>): Boolean {
         vertices.forEach {
             if (!it.isEnd()) {
-                it.paint = Marker.Visited()
+                it.paint = Appearance.Visited()
             } else {
                 getPath(it)
             }
@@ -220,7 +253,7 @@ class BoardView : View {
         while (previousVertex?.isStart() == false) {
 
             val cp = previousVertex.copy()
-            cp.paint = Marker.Path()
+            cp.paint = Appearance.Path()
             path.add(cp)
 
             previousVertex = previousVertex.previousVertex
@@ -229,21 +262,21 @@ class BoardView : View {
         Log.d(TAG, "path  $path")
     }
 
-    internal fun findNeighborsForCell(start: Vertex): MutableList<Vertex> {
+    internal fun findNeighborsForCellAndUpdateDistance(current: Vertex): MutableList<Vertex> {
         val neighbors = mutableListOf<Vertex>()
 
-        board[start.bucket]?.run {
-            neighbors.addAll(getNeighborsInOneBucket(this, start))
+        board[current.bucket]?.run {
+            neighbors.addAll(findNeighborsInOneBucketAndUpdateDistance(this, current))
         }
 
-        board[(start.bucket - 1)]?.run {
-            getFromNearBucket(this, getCellIndexInList(board, start), start.distance)?.run {
+        board[(current.bucket - 1)]?.run {
+            findNeighborInNearBucketAndUpdateDistance(this, getCellIndexInList(board, current), current.distance)?.run {
                 neighbors.add(this)
             }
         }
 
-        board[(start.bucket + 1)]?.run {
-            getFromNearBucket(this, getCellIndexInList(board, start), start.distance)?.run {
+        board[(current.bucket + 1)]?.run {
+            findNeighborInNearBucketAndUpdateDistance(this, getCellIndexInList(board, current), current.distance)?.run {
                 neighbors.add(this)
             }
         }
@@ -251,7 +284,7 @@ class BoardView : View {
         return neighbors
     }
 
-    private fun getFromNearBucket(nearBucket: LinkedList<Vertex>, index: Int, distance: Int): Vertex? {
+    private fun findNeighborInNearBucketAndUpdateDistance(nearBucket: LinkedList<Vertex>, index: Int, distance: Int): Vertex? {
 
         val cell = nearBucket[index]
         return if (!visitedVertices.contains(cell) && !cell.isStart() && !cell.isWall) {
@@ -268,7 +301,7 @@ class BoardView : View {
         } ?: 0
     }
 
-    private fun getNeighborsInOneBucket(bucket: LinkedList<Vertex>, start: Vertex): MutableList<Vertex> {
+    private fun findNeighborsInOneBucketAndUpdateDistance(bucket: LinkedList<Vertex>, start: Vertex): MutableList<Vertex> {
         val neighbors = mutableListOf<Vertex>()
         getNext(bucket, start)?.run {
             if (!visitedVertices.contains(this) && !isStart() && !isWall) {
@@ -306,15 +339,17 @@ class BoardView : View {
                     findTouchedCell(event.x, event.y)?.run {
                         when {
                             initialVertexesToDraw.isEmpty() -> {
+                                startVertex = this
                                 distance = 0
-                                paint = Marker.SourcePoint()
+                                paint = Appearance.SourcePoint()
                             }
                             initialVertexesToDraw.size == 1 -> {
-                                paint = Marker.EndPoint()
+                                endVertex = this
+                                paint = Appearance.EndPoint()
                             }
                             else -> {
                                 isWall = true
-                                paint = Marker.BlockedPoint()
+                                paint = Appearance.BlockedPoint()
                             }
                         }
 
@@ -333,7 +368,7 @@ class BoardView : View {
         val iterator = board.entries.iterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
-            entry.value.find { it.rect().contains(x, y) }?.run {
+            entry.value.find { it.rect.contains(x, y) }?.run {
                 vertex = this
             }
         }

@@ -8,13 +8,13 @@
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
-    app:behavior_peekHeight="30dp"
+    app:behavior_peekHeight="20dp"
     app:layout_behavior="@string/bottom_sheet_behavior">
 
     <ImageView
         android:id="@+id/textView"
         android:layout_width="60dp"
-        android:layout_height="15dp"
+        android:layout_height="18dp"
         android:src="@drawable/rouded"
         android:gravity="center"
         android:padding="6dp"

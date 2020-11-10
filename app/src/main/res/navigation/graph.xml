@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/path_finding"
+    android:id="@+id/graph">
+
+    <fragment
+        android:id="@+id/path_finding"
+        android:name="com.algoholic.algo.graph.PathFindingFragment"/>
+
+    <fragment
+        android:id="@+id/sorting"
+        android:name="com.algoholic.algo.sort.SortingFragment"/>
+
+    <fragment
+        android:id="@+id/finding"
+        android:name="com.algoholic.algo.find.FindElementFragment"/>
+
+</navigation>

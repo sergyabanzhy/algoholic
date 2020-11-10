@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/path_finding"
+        android:enabled="true"
+        android:icon="@drawable/graph"
+        android:title="Path finding"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/sorting"
+        android:enabled="true"
+        android:icon="@drawable/sort"
+        android:title="Sort List"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/finding"
+        android:enabled="true"
+        android:icon="@drawable/find"
+        android:title="Find in List"
+        app:showAsAction="ifRoom" />
+</menu>

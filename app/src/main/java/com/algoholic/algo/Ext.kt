@@ -1,4 +1,4 @@
-package com.algoholic.graph
+package com.algoholic.algo
 
 import android.widget.Toast
 

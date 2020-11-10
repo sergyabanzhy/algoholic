@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.algoholic.algo.BoardView
+    <com.algoholic.algo.graph.BoardView
         android:id="@+id/boardView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

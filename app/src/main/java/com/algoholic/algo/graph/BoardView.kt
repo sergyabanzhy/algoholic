@@ -1,4 +1,4 @@
-package com.algoholic.algo
+package com.algoholic.algo.graph
 
 import android.content.Context
 import android.graphics.Canvas

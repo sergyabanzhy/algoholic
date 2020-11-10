@@ -7,4 +7,9 @@
     android:background="@color/teal_700"
     tools:context=".MainActivity">
 
+    <com.algoholic.algo.sort.SortingView
+        android:layout_width="match_parent"
+        android:rotationX="180"
+        android:layout_height="match_parent"/>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

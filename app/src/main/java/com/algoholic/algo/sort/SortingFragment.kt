@@ -9,9 +9,11 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.algoholic.R
 import kotlinx.android.synthetic.main.fragment_sort.*
 import kotlinx.android.synthetic.main.player_view.*
+import kotlinx.coroutines.launch
 
 class SortingFragment : Fragment() {
 
@@ -28,9 +30,12 @@ class SortingFragment : Fragment() {
 
         initClickListeners()
 
-        observeColumnsChanges()
+        viewModel.viewModelScope.launch {
 
-        observeStartStopButton()
+            observeColumnsChanges()
+
+            observeStartStopButton()
+        }
 
         waitForViewSize()
     }
@@ -52,7 +57,10 @@ class SortingFragment : Fragment() {
     private fun observeColumnsChanges() {
         viewModel.columns.observe(this, {
             svSortingView.columns = it
-            svSortingView.invalidate()
+        })
+
+        viewModel.columnIndexesToAnimate.observe(this, {
+            svSortingView.invalidateByIndex(it)
         })
     }
 

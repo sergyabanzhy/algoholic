@@ -5,10 +5,7 @@ import androidx.annotation.CallSuper
 import androidx.lifecycle.*
 import com.algoholic.R
 import com.algoholic.algo.sort.sortingplayer.SortingProcessPlayer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.random.Random
 
 class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = SortingProcessPlayer(BubbleSort())): ViewModel(), LifecycleObserver {
@@ -16,6 +13,8 @@ class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = 
     private var isStarted: Boolean = false
 
     val columns : MutableLiveData<List<IPaintable>> = MutableLiveData()
+
+    val columnIndexesToAnimate : MutableLiveData<List<Int>> = MutableLiveData()
 
     val playStopButtonState : MutableLiveData<PlayStopButtonState> = MutableLiveData(if (isStarted) PlayStopButtonState.Started() else PlayStopButtonState.Stopped())
 
@@ -65,9 +64,9 @@ class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = 
                 playStopButtonState.value = PlayStopButtonState.Stopped()
                 isStarted = false
             }
-        } else {
-            viewModelScope.launch(Dispatchers.IO) {
-                sortingProcessPlayer.startSorting(started = {
+        } else { viewModelScope.launch(Dispatchers.IO) {
+                sortingProcessPlayer.startSorting(
+                    started = {
                     playStopButtonState.postValue(PlayStopButtonState.Started())
                     isStarted = true
                 }, sorted = {
@@ -76,7 +75,9 @@ class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = 
                     isStarted = false
                     Log.d(TAG, "sorted")
                 }, invalidate = {
-                    columns.postValue(columns.value)
+
+                        columnIndexesToAnimate.postValue(it)
+
                 })
             }
         }

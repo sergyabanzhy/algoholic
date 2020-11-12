@@ -19,6 +19,19 @@ class SortingView: View {
             : super(context, attrs, defStyleAttr, defStyleRes)
 
     var columns: List<IPaintable> = emptyList()
+    set(value) {
+        field = value
+        invalidate()
+        //columns.forEach { it.animate { invalidate() } }
+    }
+
+    fun invalidateByIndex(indexes: List<Int>) {
+        indexes.forEach {
+            columns[it].animate { invalidate() }
+        }
+
+        invalidate()
+    }
 
     override fun onDraw(canvas: Canvas) {
         Log.d(TAG, "onDraw")

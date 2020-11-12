@@ -7,5 +7,5 @@ interface ISortingProcessPlayer {
     fun stepForward()
     fun stepBackward()
     fun collectionToVisualize(columns: MutableList<Column>)
-    suspend fun startSorting(started: () -> Unit, sorted: () -> Unit, invalidate: (List<Int>) -> Unit)
+    suspend fun startSorting(started: () -> Unit, sorted: () -> Unit, invalidate: suspend (Pair<Column, Column>) -> Unit)
 }

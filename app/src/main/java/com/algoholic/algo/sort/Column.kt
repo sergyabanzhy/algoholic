@@ -1,5 +1,6 @@
 package com.algoholic.algo.sort
 
+import android.animation.Animator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.graphics.Canvas
@@ -23,13 +24,13 @@ data class Column(var left : Int, var top : Int, var right : Int, var bottom : I
         canvas.drawRect(rect(), state.colorState)
     }
 
-    override fun animate(invalidate: () -> Unit) {
-        createAnimator {
+    override fun animator(invalidate: () -> Unit): Animator {
+        return createAnimator {
             invalidate.invoke()
         }
     }
 
-    private fun createAnimator(invalidate : () -> Unit) {
+    private fun createAnimator(invalidate : () -> Unit): Animator {
         val propertyHeight: PropertyValuesHolder = PropertyValuesHolder.ofInt("PROPERTY_HEIGHT", 0, bottom)
         val animator = ValueAnimator()
         animator.setValues(propertyHeight)
@@ -39,7 +40,9 @@ data class Column(var left : Int, var top : Int, var right : Int, var bottom : I
             animatedHeight = it.getAnimatedValue("PROPERTY_HEIGHT") as Int
             invalidate.invoke()
         }
-        animator.start()
+      //  animator.start()
+
+        return animator
     }
 
     sealed class ColumnState {

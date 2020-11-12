@@ -6,15 +6,16 @@ import androidx.lifecycle.*
 import com.algoholic.R
 import com.algoholic.algo.sort.sortingplayer.SortingProcessPlayer
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlin.random.Random
 
 class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = SortingProcessPlayer(BubbleSort())): ViewModel(), LifecycleObserver {
 
     private var isStarted: Boolean = false
 
-    val columns : MutableLiveData<List<IPaintable>> = MutableLiveData()
+    val columnToDraw: Channel<Pair<Column, Column>> = Channel(capacity = Channel.RENDEZVOUS)
 
-    val columnIndexesToAnimate : MutableLiveData<List<Int>> = MutableLiveData()
+    val columns : MutableLiveData<List<Column>> = MutableLiveData()
 
     val playStopButtonState : MutableLiveData<PlayStopButtonState> = MutableLiveData(if (isStarted) PlayStopButtonState.Started() else PlayStopButtonState.Stopped())
 
@@ -59,7 +60,7 @@ class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = 
         Log.d(TAG, "startStopButtonPressed")
 
         if (isStarted) {
-            viewModelScope.coroutineContext.cancelChildren()
+
             sortingProcessPlayer.stopSorting {
                 playStopButtonState.value = PlayStopButtonState.Stopped()
                 isStarted = false
@@ -75,9 +76,7 @@ class SortingViewModel(private val sortingProcessPlayer: SortingProcessPlayer = 
                     isStarted = false
                     Log.d(TAG, "sorted")
                 }, invalidate = {
-
-                        columnIndexesToAnimate.postValue(it)
-
+                        columnToDraw.send(it)
                 })
             }
         }

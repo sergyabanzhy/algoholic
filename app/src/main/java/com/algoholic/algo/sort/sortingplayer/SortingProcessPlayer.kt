@@ -12,7 +12,7 @@ class SortingProcessPlayer (private val bubbleSort: BubbleSort) : ISortingProces
         bubbleSort.toBeSorted = columns
     }
 
-    override suspend fun startSorting(started: () -> (Unit), sorted: () -> (Unit), invalidate: (List<Int>) -> Unit) {
+    override suspend fun startSorting(started: () -> (Unit), sorted: () -> (Unit), invalidate: suspend (Pair<Column, Column>) -> Unit) {
         Log.d(TAG, "startSorting")
 
         started.invoke()

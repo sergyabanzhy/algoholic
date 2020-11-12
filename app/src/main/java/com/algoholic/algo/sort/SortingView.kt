@@ -18,7 +18,7 @@ class SortingView: View {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int)
             : super(context, attrs, defStyleAttr, defStyleRes)
 
-    var columns: List<IPaintable> = emptyList()
+    var columns: List<Column> = emptyList()
     set(value) {
         field = value
         invalidate()
@@ -27,7 +27,7 @@ class SortingView: View {
 
     fun invalidateByIndex(indexes: List<Int>) {
         indexes.forEach {
-            columns[it].animate { invalidate() }
+            columns[it].animator { invalidate() }
         }
 
         invalidate()
